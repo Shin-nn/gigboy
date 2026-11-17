@@ -39,6 +39,8 @@ import { bandChordVoicingsRouter } from './routes/bandChordVoicings.js';
 import { bandSongRevisionsRouter } from './routes/songRevisions.js';
 import { recordingCommentsRouter } from './routes/recordingComments.js';
 import { bandSetlistSessionRouter } from './routes/setlistSessions.js';
+import { apiTokensRouter } from './routes/apiTokens.js';
+import { mcpRouter } from './mcp/router.js';
 
 if (!process.env.DATABASE_URL) {
   throw new Error('DATABASE_URL environment variable is required.');
@@ -82,6 +84,7 @@ app.use('/api/auth', authRateLimit, authRouter);
 app.use('/api/admin/invites', adminInvitesRouter);
 app.use('/api/admin/users', adminUsersRouter);
 app.use('/api/invites', authRateLimit, publicInvitesRouter);
+app.use('/api/api-tokens', apiTokensRouter);
 app.use('/api/storage-usage', storageUsageRouter);
 app.use('/api/song-badges', songBadgesRouter);
 app.use('/api/bands/:bandId/songs/:songId/attachments', bandAttachmentsRouter);
@@ -111,6 +114,9 @@ app.use('/api/public', publicPressKitsRouter);
 app.use('/api/public', publicCalendarRouter);
 app.use('/api/public', publicAssetsRouter);
 app.use('/api/bands', bandsRouter);
+
+// Model Context Protocol endpoint for AI assistants, authenticated by personal API tokens.
+app.use('/mcp', mcpRouter);
 
 app.use((req, res, next) => {
   if (req.path.startsWith('/api/')) {

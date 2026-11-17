@@ -1,5 +1,5 @@
 import { setlists } from '../db/schema.js';
-import { buildBandCrudRouter } from './bandResources.js';
+import { buildBandCrudRouter, createBandCrudService } from './bandResources.js';
 import { removeNullish } from '../lib/serialize.js';
 
 type SetlistRow = typeof setlists.$inferSelect;
@@ -31,7 +31,7 @@ function fromBody(body: Record<string, unknown>, id: string, bandId: string) {
   };
 }
 
-export const bandSetlistsRouter = buildBandCrudRouter({
+export const setlistsService = createBandCrudService({
   table: setlists,
   idColumn: setlists.id,
   bandIdColumn: setlists.bandId,
@@ -41,3 +41,5 @@ export const bandSetlistsRouter = buildBandCrudRouter({
   toApi,
   fromBody,
 });
+
+export const bandSetlistsRouter = buildBandCrudRouter(setlistsService);

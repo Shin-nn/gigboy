@@ -1,5 +1,5 @@
 import { tours } from '../db/schema.js';
-import { buildBandCrudRouter } from './bandResources.js';
+import { buildBandCrudRouter, createBandCrudService } from './bandResources.js';
 import { removeNullish } from '../lib/serialize.js';
 
 type TourRow = typeof tours.$inferSelect;
@@ -26,7 +26,7 @@ function fromBody(body: Record<string, unknown>, id: string, bandId: string) {
   };
 }
 
-export const bandToursRouter = buildBandCrudRouter({
+export const toursService = createBandCrudService({
   table: tours,
   idColumn: tours.id,
   bandIdColumn: tours.bandId,
@@ -36,3 +36,5 @@ export const bandToursRouter = buildBandCrudRouter({
   toApi,
   fromBody,
 });
+
+export const bandToursRouter = buildBandCrudRouter(toursService);

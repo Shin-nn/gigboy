@@ -1,5 +1,5 @@
 import { songs } from '../db/schema.js';
-import { buildBandCrudRouter } from './bandResources.js';
+import { buildBandCrudRouter, createBandCrudService } from './bandResources.js';
 import { removeNullish } from '../lib/serialize.js';
 import { recordSongRevision } from '../lib/songRevisions.js';
 import { deleteSongFiles } from '../lib/songFiles.js';
@@ -55,7 +55,7 @@ function fromBody(body: Record<string, unknown>, id: string, bandId: string) {
   };
 }
 
-export const bandSongsRouter = buildBandCrudRouter({
+export const songsService = createBandCrudService({
   table: songs,
   idColumn: songs.id,
   bandIdColumn: songs.bandId,
@@ -64,8 +64,8 @@ export const bandSongsRouter = buildBandCrudRouter({
   itemType: 'song',
   toApi,
   fromBody,
-  afterWrite: async ({ row, req }) => {
-    await recordSongRevision({ songRow: row as SongRow, editorUserId: req.userId ?? null });
+  afterWrite: async ({ row, userId }) => {
+    await recordSongRevision({ songRow: row as SongRow, editorUserId: userId });
   },
   // song_recordings/attachments cascade-delete their DB rows with the song; their files don't
   // clean up on their own (see deleteSongFiles). Query them before the row — and its cascade — is gone.
@@ -73,3 +73,5 @@ export const bandSongsRouter = buildBandCrudRouter({
     await deleteSongFiles((row as SongRow).id);
   },
 });
+
+export const bandSongsRouter = buildBandCrudRouter(songsService);

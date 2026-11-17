@@ -119,6 +119,10 @@ via `VITE_DEV_ORIGIN` in [package.json](package.json), or the port with `PORT=�
 - **Offline-capable PWA** — install it, and it keeps working without a connection
 - **Admin-controlled storage quotas** — self-hosters can cap how much each user's bands are
   allowed to store, right from the admin dashboard
+- **Postgres or SQLite** — run with a Postgres container, or keep the whole database in a single
+  SQLite file (`docker-compose.sqlite.yml`)
+- **Works with AI assistants** — a built-in MCP server lets Claude (or any MCP client) read and
+  edit your songs, setlists, gigs, riders and press kits with a personal API token
 
 ## User guide
 
@@ -137,7 +141,8 @@ the UI changes; the header of that script explains how to run it.
 | React 18 + TypeScript | UI |
 | Vite 7 | Build tooling |
 | React Router 7 | Client-side routing |
-| Express + Postgres (Drizzle ORM) | API server & data storage |
+| Express + Postgres or SQLite (Drizzle ORM) | API server & data storage |
+| Model Context Protocol (`/mcp`) | AI assistant access via personal API tokens |
 | Docker Compose | Deployment |
 | lucide-react | Icons |
 | Web MediaRecorder API | In-browser audio recording |
@@ -197,7 +202,8 @@ npm run dev
 
 Open [http://localhost:5173](http://localhost:5173) for the frontend. The API server runs
 separately — see the "Development (without Docker)" section of [SELFHOSTING.md](SELFHOSTING.md)
-for running `server:dev` against a local Postgres instance.
+for running `server:dev` against a local Postgres instance — or point `DATABASE_URL` at a SQLite
+file (`DATABASE_URL=file:./data/gigboy.db`) and skip Postgres entirely.
 
 ## ChordPro format
 

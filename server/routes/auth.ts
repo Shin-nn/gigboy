@@ -13,15 +13,11 @@ import {
   revokeOtherSessions,
 } from '../middleware/session.js';
 import { toPublicUser } from '../lib/user.js';
+import { isUniqueViolation } from '../lib/dbErrors.js';
 
 // A valid-looking bcrypt hash of a random string, compared against on the "no such user" login
 // path so response timing doesn't reveal whether an email is registered.
 const DUMMY_BCRYPT_HASH = '$2b$12$prhAtXV2Zu8T7dLYsqf0Du.LazNI20TWv/eaXn0/gzNSKEQE/AcxK';
-
-const UNIQUE_VIOLATION = '23505';
-function isUniqueViolation(err: unknown): boolean {
-  return typeof err === 'object' && err !== null && 'code' in err && (err as { code?: string }).code === UNIQUE_VIOLATION;
-}
 
 const BCRYPT_ROUNDS = 12;
 

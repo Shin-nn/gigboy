@@ -1,0 +1,25 @@
+# Single-container Gigboy backed by SQLite — no Postgres service. Good for small bands, a NAS,
+# or trying Gigboy out. Start with:
+#   docker compose -f docker-compose.sqlite.yml up -d
+# The database is one file, ./data/db/gigboy.db; uploads go to ./data/attachments.
+services:
+  app:
+    image: ghcr.io/blindpassasjer/gigboy:latest
+    build: .
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: file:/data/db/gigboy.db
+      SESSION_SECRET: ${SESSION_SECRET:?Set SESSION_SECRET in .env}
+      ATTACHMENTS_DIR: /data/attachments
+      PORT: ${PORT:-6168}
+      NODE_ENV: production
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      PUBLIC_ORIGIN: ${PUBLIC_ORIGIN:-}
+      TRUST_PROXY: ${TRUST_PROXY:-false}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+    volumes:
+      - ./data/db:/data/db
+      - ./data/attachments:/data/attachments
+    ports:
+      - "${PORT:-6168}:${PORT:-6168}"

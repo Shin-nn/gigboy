@@ -7,6 +7,8 @@ import type {
   AdminInvitesClient,
   AdminUserListing,
   AdminUsersClient,
+  ApiToken,
+  ApiTokensClient,
   AuthClient,
   BandAttachmentsClient,
   BandInvite,
@@ -447,6 +449,22 @@ const adminUsersClient: AdminUsersClient = {
   },
 };
 
+const apiTokensClient: ApiTokensClient = {
+  async list() {
+    const data = await apiFetch<{ apiTokens: ApiToken[] }>('/api-tokens');
+    return data.apiTokens;
+  },
+  async create(input) {
+    return apiFetch<{ token: string; apiToken: ApiToken }>('/api-tokens', {
+      method: 'POST',
+      body: JSON.stringify(input),
+    });
+  },
+  async revoke(id) {
+    await apiFetch<Record<string, never>>(`/api-tokens/${encodeURIComponent(id)}`, { method: 'DELETE' });
+  },
+};
+
 export const apiClient: DataClient = {
   auth: authClient,
   bands: bandsClient,
@@ -466,4 +484,5 @@ export const apiClient: DataClient = {
   publicPressKits: publicPressKitsClient,
   adminInvites: adminInvitesClient,
   adminUsers: adminUsersClient,
+  apiTokens: apiTokensClient,
 };

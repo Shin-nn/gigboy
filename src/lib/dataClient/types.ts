@@ -34,6 +34,7 @@ export interface DataClient {
   publicPressKits: PublicPressKitsClient;
   adminInvites: AdminInvitesClient;
   adminUsers: AdminUsersClient;
+  apiTokens: ApiTokensClient;
 }
 
 /** Result of looking up an invite token, mirroring `GET /api/invites/:token`'s success body. */
@@ -282,4 +283,22 @@ export interface PublicPressKit {
 export interface PublicPressKitsClient {
   /** Null if the token doesn't exist or has been revoked. */
   get(token: string): Promise<PublicPressKit | null>;
+}
+
+/** A personal API token's metadata. The secret itself is only returned once, from `create`. */
+export interface ApiToken {
+  id: string;
+  name: string;
+  /** First characters of the token, to tell tokens apart. */
+  tokenPrefix: string;
+  createdAt: string;
+  lastUsedAt: string | null;
+  expiresAt: string | null;
+}
+
+/** Personal API tokens, used to connect AI assistants to the `/mcp` endpoint. */
+export interface ApiTokensClient {
+  list(): Promise<ApiToken[]>;
+  create(input: { name: string; expiresInDays?: number | null }): Promise<{ token: string; apiToken: ApiToken }>;
+  revoke(id: string): Promise<void>;
 }

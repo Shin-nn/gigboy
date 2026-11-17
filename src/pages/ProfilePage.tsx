@@ -12,6 +12,8 @@ import { buildSongbookExportZip, triggerSongbookExportDownload, type PressKitIma
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import type { Gig, Tour } from '../types';
 import { writeStoredString } from '../lib/safeStorage';
+import { isDemoMode } from '../lib/demo/demoMode';
+import ApiTokensPanel from '../components/ApiTokensPanel';
 
 export default function ProfilePage() {
   useDocumentTitle('Profile');
@@ -390,6 +392,8 @@ export default function ProfilePage() {
             </div>
           </section>
         )}
+
+        {!isDemoMode && <ApiTokensPanel />}
 
         <section className="profile-settings-card">
           <div className="profile-section-heading">

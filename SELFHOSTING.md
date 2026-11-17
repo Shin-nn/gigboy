@@ -2,8 +2,9 @@
 
 Gigboy is self-hosted only: run your own copy on your own infrastructure with Docker Compose.
 There is no hosted SaaS version, and no third-party account (Firebase, Stripe, Cloudflare) is
-involved anywhere in the stack — it's just this app, a Postgres database, and a volume for
-uploaded files.
+involved anywhere in the stack — it's just this app, a database (Postgres, or a single SQLite
+file — see [SQLite instead of Postgres](#sqlite-instead-of-postgres)), and a volume for uploaded
+files.
 
 > This build covers: email/password auth with full profile management (email/username/avatar/
 > full name/password changes, account deletion); personal and band-owned songs, songlists, and
@@ -88,6 +89,30 @@ uploaded files.
      this left at its default (`false`) every request looks like it comes from the proxy, so
      one abuser trips the limit for everyone. Leave it `false` when the container is exposed
      directly — setting `1` without a real proxy lets clients spoof their IP.
+
+## SQLite instead of Postgres
+
+For a small install (one band, a NAS, trying Gigboy out) you can skip the Postgres container and
+keep everything in one SQLite file. Use the single-service Compose file:
+
+```sh
+cp .env.example .env              # only SESSION_SECRET (and optionally ADMIN_*) matter here
+mkdir -p data/db data/attachments
+docker compose -f docker-compose.sqlite.yml up -d
+```
+
+The database lives at `./data/db/gigboy.db`. Any `DATABASE_URL` of the form `file:/path/to/x.db`
+(or a path ending in `.db`/`.sqlite`) selects SQLite; `postgres://…` selects Postgres. Remote
+libsql/Turso databases work too: `DATABASE_URL=libsql://…` plus `DATABASE_AUTH_TOKEN`.
+
+Postgres and SQLite have separate migration histories, and there's no built-in converter between
+them — pick one when you set up. Postgres remains the better choice for many concurrent users.
+
+Back up SQLite with its online backup command (safe while Gigboy is running):
+
+```sh
+sqlite3 data/db/gigboy.db ".backup 'gigboy-backup.db'"
+```
 
 ## Admin account and invites
 
@@ -181,9 +206,29 @@ docker compose up -d
 Migrations run automatically on startup, so new schema changes are applied before the app
 serves traffic.
 
+## AI assistants (MCP)
+
+Gigboy has a built-in [Model Context Protocol](https://modelcontextprotocol.io) server at
+`/mcp` (Streamable HTTP). It lets Claude and other MCP clients read and edit a user's bands:
+songs (ChordPro), song lists, setlists, gigs, tours, technical riders and press kits. Deletes go
+to the band's trash like in the app.
+
+Each user creates their own token under **Profile → AI assistants (MCP)**. A token acts as that
+user with their band roles (viewers stay read-only), is shown once, stored only as a hash, and
+can be revoked any time. To connect Claude Code:
+
+```sh
+claude mcp add --transport http gigboy https://gigboy.example.com/mcp \
+  --header "Authorization: Bearer gbt_…"
+```
+
+Other clients: add a remote/HTTP MCP server with that URL and the `Authorization` header. If a
+reverse proxy sits in front of Gigboy, it must pass the `Authorization` header through to `/mcp`.
+
 ## Development (without Docker)
 
-Run a local Postgres instance yourself, then:
+Run a local Postgres instance yourself (or skip it and use
+`DATABASE_URL=file:./data/gigboy.db`), then:
 
 ```sh
 export DATABASE_URL=postgres://gigboy:yourpassword@localhost:5432/gigboy

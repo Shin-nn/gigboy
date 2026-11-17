@@ -16,6 +16,7 @@ RUN npm ci --omit=dev
 COPY --from=build /app/dist ./dist
 COPY --from=build /app/dist-server ./dist-server
 COPY --from=build /app/server/db/migrations ./dist-server/db/migrations
+COPY --from=build /app/server/db/migrations-sqlite ./dist-server/db/migrations-sqlite
 COPY docker-entrypoint.sh ./docker-entrypoint.sh
 RUN chmod +x ./docker-entrypoint.sh
 

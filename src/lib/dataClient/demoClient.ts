@@ -2,6 +2,7 @@ import type { Gig, InputList, PressKit, Setlist, Song, SongList, Tour } from '..
 import type {
   AdminInvitesClient,
   AdminUsersClient,
+  ApiTokensClient,
   AuthClient,
   BandAttachmentsClient,
   BandScopedCrudClient,
@@ -178,6 +179,15 @@ const adminUsersClient: AdminUsersClient = {
   },
 };
 
+// The demo has no server, so there's no /mcp endpoint for a token to unlock.
+const apiTokensClient: ApiTokensClient = {
+  list: () => delay([]),
+  create: async () => {
+    throw new Error('API tokens are not available in the demo.');
+  },
+  revoke: async () => undefined,
+};
+
 export const demoClient: DataClient = {
   auth: authClient,
   bands: bandsClient,
@@ -197,4 +207,5 @@ export const demoClient: DataClient = {
   publicPressKits: publicPressKitsClient,
   adminInvites: adminInvitesClient,
   adminUsers: adminUsersClient,
+  apiTokens: apiTokensClient,
 };

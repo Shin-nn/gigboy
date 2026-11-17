@@ -37,13 +37,75 @@ export async function loadBandPressKit(bandId: string, id: string): Promise<Pres
   return rows[0] ?? null;
 }
 
+export async function listPressKits(bandId: string) {
+  const rows = await db.select().from(pressKits).where(eq(pressKits.bandId, bandId));
+  return rows.map(pressKitToApi);
+}
+
+export async function createPressKit(bandId: string, name: string, userId: string) {
+  const [row] = await db
+    .insert(pressKits)
+    .values({
+      id: crypto.randomUUID(),
+      bandId,
+      name,
+      richText: '',
+      imageIds: [],
+      videoUrls: [],
+      selectedVideoUrls: [],
+      presaveUrls: [],
+      selectedPresaveUrls: [],
+      gigIds: [],
+      createdBy: userId,
+    })
+    .returning();
+  return pressKitToApi(row);
+}
+
+/** Partial update — only keys present in `body` change. Null when the kit isn't in this band. */
+export async function updatePressKit(bandId: string, id: string, body: Record<string, unknown>) {
+  if (!(await loadBandPressKit(bandId, id))) return null;
+  const updates: Partial<typeof pressKits.$inferInsert> = {};
+  if (typeof body.name === 'string') updates.name = body.name;
+  if ('icon' in body) updates.icon = (body.icon as string | null) ?? null;
+  if (typeof body.richText === 'string') updates.richText = body.richText;
+  if (Array.isArray(body.imageIds)) updates.imageIds = body.imageIds as string[];
+  if (Array.isArray(body.videoUrls)) updates.videoUrls = body.videoUrls as string[];
+  if (Array.isArray(body.selectedVideoUrls)) updates.selectedVideoUrls = body.selectedVideoUrls as string[];
+  if ('presaveReleaseName' in body) updates.presaveReleaseName = (body.presaveReleaseName as string | null) ?? null;
+  if ('presaveReleaseDate' in body) updates.presaveReleaseDate = (body.presaveReleaseDate as string | null) ?? null;
+  if (Array.isArray(body.presaveUrls)) updates.presaveUrls = body.presaveUrls as string[];
+  if (Array.isArray(body.selectedPresaveUrls)) updates.selectedPresaveUrls = body.selectedPresaveUrls as string[];
+
+  if (Array.isArray(body.gigIds)) {
+    // Only this band's gigs may be listed on this band's kit (the ids are stored loosely, not as FKs).
+    const requested = body.gigIds.filter((g): g is string => typeof g === 'string');
+    const owned = requested.length
+      ? await db.select({ id: gigs.id }).from(gigs).where(and(eq(gigs.bandId, bandId), inArray(gigs.id, requested)))
+      : [];
+    const ownedIds = new Set(owned.map((g) => g.id));
+    updates.gigIds = requested.filter((g) => ownedIds.has(g));
+  }
+
+  const [row] = await db.update(pressKits).set(updates).where(eq(pressKits.id, id)).returning();
+  return pressKitToApi(row);
+}
+
+/** Snapshots to trash and deletes. False when the kit isn't in this band. */
+export async function deletePressKit(bandId: string, id: string) {
+  const existing = await loadBandPressKit(bandId, id);
+  if (!existing) return false;
+  await insertTrashItem({ bandId }, 'pressKit', pressKitToApi(existing));
+  await db.delete(pressKits).where(eq(pressKits.id, id));
+  return true;
+}
+
 export const bandPressKitsRouter = Router({ mergeParams: true });
 bandPressKitsRouter.use(requireAuth);
 
 bandPressKitsRouter.get('/', requireBandMember, async (req, res) => {
   try {
-    const rows = await db.select().from(pressKits).where(eq(pressKits.bandId, req.params.bandId));
-    res.json({ pressKits: rows.map(pressKitToApi) });
+    res.json({ pressKits: await listPressKits(req.params.bandId) });
   } catch (err) {
     console.error('Failed to list band press kits:', err);
     res.status(500).json({ error: 'Something went wrong. Please try again.' });
@@ -54,26 +116,7 @@ bandPressKitsRouter.post('/', requireBandEditor, async (req, res) => {
   try {
     const body = (req.body ?? {}) as Record<string, unknown>;
     const name = typeof body.name === 'string' ? body.name : '';
-    const bandId = req.params.bandId;
-
-    const [row] = await db
-      .insert(pressKits)
-      .values({
-        id: crypto.randomUUID(),
-        bandId,
-        name,
-        richText: '',
-        imageIds: [],
-        videoUrls: [],
-        selectedVideoUrls: [],
-        presaveUrls: [],
-        selectedPresaveUrls: [],
-        gigIds: [],
-        createdBy: req.userId!,
-      })
-      .returning();
-
-    res.json({ pressKit: pressKitToApi(row) });
+    res.json({ pressKit: await createPressKit(req.params.bandId, name, req.userId!) });
   } catch (err) {
     console.error('Failed to create band press kit:', err);
     res.status(500).json({ error: 'Something went wrong. Please try again.' });
@@ -82,42 +125,12 @@ bandPressKitsRouter.post('/', requireBandEditor, async (req, res) => {
 
 bandPressKitsRouter.put('/:id', requireBandEditor, async (req, res) => {
   try {
-    const existing = await loadBandPressKit(req.params.bandId, req.params.id);
-    if (!existing) {
+    const pressKit = await updatePressKit(req.params.bandId, req.params.id, (req.body ?? {}) as Record<string, unknown>);
+    if (!pressKit) {
       res.status(404).json({ error: 'Press kit not found.' });
       return;
     }
-
-    const body = (req.body ?? {}) as Record<string, unknown>;
-    const updates: Partial<typeof pressKits.$inferInsert> = {};
-    if (typeof body.name === 'string') updates.name = body.name;
-    if ('icon' in body) updates.icon = (body.icon as string | null) ?? null;
-    if (typeof body.richText === 'string') updates.richText = body.richText;
-    if (Array.isArray(body.imageIds)) updates.imageIds = body.imageIds as string[];
-    if (Array.isArray(body.videoUrls)) updates.videoUrls = body.videoUrls as string[];
-    if (Array.isArray(body.selectedVideoUrls)) updates.selectedVideoUrls = body.selectedVideoUrls as string[];
-    if ('presaveReleaseName' in body) updates.presaveReleaseName = (body.presaveReleaseName as string | null) ?? null;
-    if ('presaveReleaseDate' in body) updates.presaveReleaseDate = (body.presaveReleaseDate as string | null) ?? null;
-    if (Array.isArray(body.presaveUrls)) updates.presaveUrls = body.presaveUrls as string[];
-    if (Array.isArray(body.selectedPresaveUrls)) updates.selectedPresaveUrls = body.selectedPresaveUrls as string[];
-
-    if (Array.isArray(body.gigIds)) {
-      // Only this band's gigs may be listed on this band's kit (the ids are stored loosely, not as FKs).
-      const requested = body.gigIds.filter((g): g is string => typeof g === 'string');
-      const owned = requested.length
-        ? await db.select({ id: gigs.id }).from(gigs).where(and(eq(gigs.bandId, req.params.bandId), inArray(gigs.id, requested)))
-        : [];
-      const ownedIds = new Set(owned.map((g) => g.id));
-      updates.gigIds = requested.filter((g) => ownedIds.has(g));
-    }
-
-    const [row] = await db
-      .update(pressKits)
-      .set(updates)
-      .where(eq(pressKits.id, req.params.id))
-      .returning();
-
-    res.json({ pressKit: pressKitToApi(row) });
+    res.json({ pressKit });
   } catch (err) {
     console.error('Failed to update band press kit:', err);
     res.status(500).json({ error: 'Something went wrong. Please try again.' });
@@ -126,14 +139,10 @@ bandPressKitsRouter.put('/:id', requireBandEditor, async (req, res) => {
 
 bandPressKitsRouter.delete('/:id', requireBandEditor, async (req, res) => {
   try {
-    const bandId = req.params.bandId;
-    const existing = await loadBandPressKit(bandId, req.params.id);
-    if (!existing) {
+    if (!(await deletePressKit(req.params.bandId, req.params.id))) {
       res.status(404).json({ error: 'Press kit not found.' });
       return;
     }
-    await insertTrashItem({ bandId }, 'pressKit', pressKitToApi(existing));
-    await db.delete(pressKits).where(eq(pressKits.id, req.params.id));
     res.json({});
   } catch (err) {
     console.error('Failed to delete band press kit:', err);

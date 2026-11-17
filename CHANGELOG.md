@@ -8,6 +8,16 @@ pre-1.0: minor bumps for features, patch bumps for fixes.
 
 ## [Unreleased]
 
+### Added
+- **SQLite support.** Set `DATABASE_URL=file:/path/to/gigboy.db` to run without Postgres; the
+  new `docker-compose.sqlite.yml` runs Gigboy as a single container with a single database file.
+  Postgres stays the default and keeps its own migration history (`server/db/migrations`);
+  SQLite migrations live in `server/db/migrations-sqlite`.
+- **MCP server for AI assistants.** `POST /mcp` (Streamable HTTP) exposes tools to list, read,
+  create, update and delete songs, song lists, setlists, gigs, tours, technical riders and press
+  kits. Clients authenticate with personal API tokens created under Profile → AI assistants
+  (MCP); a token acts as its user and respects their editor/viewer role in each band.
+
 ## [0.4.0] - 2026-10-20
 
 ### Added

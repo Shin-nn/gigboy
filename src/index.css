@@ -9176,6 +9176,59 @@ input, select, textarea { font: inherit; color: var(--text); }
   grid-column: 1 / -1;
 }
 
+.api-tokens-endpoint,
+.api-tokens-secret {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  min-width: 0;
+}
+
+.api-tokens-endpoint code,
+.api-tokens-secret code {
+  flex: 1;
+  min-width: 0;
+  overflow-x: auto;
+  white-space: nowrap;
+  padding: var(--space-xs) var(--space-sm);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm, 6px);
+  background: var(--bg);
+  font-size: 0.85em;
+}
+
+.api-tokens-reveal {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-sm);
+  padding: var(--space-lg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+
+.api-tokens-reveal .api-tokens-secret {
+  align-self: stretch;
+}
+
+.api-tokens-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.api-tokens-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-md, 12px);
+  padding-top: var(--space-sm);
+  border-top: 1px solid var(--border);
+}
+
 .profile-settings-card h2 {
   display: inline-flex;
   align-items: center;

@@ -3,7 +3,7 @@ import type { NextFunction, Request, Response } from 'express';
 import { and, eq } from 'drizzle-orm';
 import { db } from '../db/client.js';
 import { bandRiders, gigs, pressKits, setlists, tours } from '../db/schema.js';
-import { buildBandCrudRouter } from './bandResources.js';
+import { buildBandCrudRouter, createBandCrudService } from './bandResources.js';
 import { requireAuth } from '../middleware/session.js';
 import { requireBandEditor } from '../middleware/bandAccess.js';
 import { removeNullish } from '../lib/serialize.js';
@@ -74,7 +74,7 @@ function fromBody(body: Record<string, unknown>, id: string, bandId: string) {
   };
 }
 
-const crudRouter = buildBandCrudRouter({
+export const gigsService = createBandCrudService({
   table: gigs,
   idColumn: gigs.id,
   bandIdColumn: gigs.bandId,
@@ -84,6 +84,8 @@ const crudRouter = buildBandCrudRouter({
   toApi,
   fromBody,
 });
+
+const crudRouter = buildBandCrudRouter(gigsService);
 
 /**
  * The FKs only guarantee the attached rows exist, not that they belong to this band — without this
@@ -108,25 +110,24 @@ async function attachmentsBelongToBand(
   return null;
 }
 
-/** Rejects bad gig bodies before the CRUD handlers run (their fromBody() would otherwise paper over them). */
+/**
+ * Validation fromBody() would otherwise paper over: title/startsAt present, endsAt after startsAt,
+ * and attached tour/setlist/kit/rider all in this band. Returns an error message, or null if OK.
+ * Shared with the MCP server's gig tools.
+ */
+export async function validateGigInput(bandId: string, body: Record<string, unknown>): Promise<string | null> {
+  if (typeof body.title !== 'string' || !body.title.trim()) return 'title is required.';
+  const startsAt = optionalDate(body.startsAt);
+  if (startsAt === null) return 'startsAt must be a valid date.';
+  const endsAt = optionalDate(body.endsAt);
+  if (endsAt !== null && endsAt.getTime() <= startsAt.getTime()) return 'endsAt must be after startsAt.';
+  return attachmentsBelongToBand(bandId, body);
+}
+
+/** Rejects bad gig bodies before the CRUD handlers run. */
 async function validateGigBody(req: Request, res: Response, next: NextFunction) {
   try {
-    const body = (req.body ?? {}) as Record<string, unknown>;
-    if (typeof body.title !== 'string' || !body.title.trim()) {
-      res.status(400).json({ error: 'title is required.' });
-      return;
-    }
-    const startsAt = optionalDate(body.startsAt);
-    if (startsAt === null) {
-      res.status(400).json({ error: 'startsAt must be a valid date.' });
-      return;
-    }
-    const endsAt = optionalDate(body.endsAt);
-    if (endsAt !== null && endsAt.getTime() <= startsAt.getTime()) {
-      res.status(400).json({ error: 'endsAt must be after startsAt.' });
-      return;
-    }
-    const error = await attachmentsBelongToBand(req.params.bandId, body);
+    const error = await validateGigInput(req.params.bandId, (req.body ?? {}) as Record<string, unknown>);
     if (error) {
       res.status(400).json({ error });
       return;
