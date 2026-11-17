@@ -7,9 +7,11 @@ describe('chord grammar', () => {
     'G', 'Am7', 'Cmaj7', 'G7sus4', 'C#m7b5', 'A7(b9)', 'Gm7b5', 'Cadd9', 'C6/9', 'Cm(maj7)',
     'Bbmaj7#11', 'E5', 'F♯m', 'B♭', 'C+', 'C°', 'C△7', 'CM7', 'Dm7-5', 'C7#9', 'Bm7b5/E',
     'D/F#', 'Asus2', 'F#m7add11', 'D9sus4', 'N.C.', 'NC',
+    // Czech/German notation: H = B, "mi"/"moll" = minor.
+    'H', 'Hm', 'Hmi', 'H7', 'Ami7', 'Dmoll', 'D/H',
   ])('accepts %s', (c) => expect(CHORD_TOKEN_RE.test(c)).toBe(true));
 
-  it.each(['Chorus', 'Bridge', 'Dance', 'Beautiful', 'repeat from the top', 'Am I', 'Hm', 'Gone'])(
+  it.each(['Chorus', 'Bridge', 'Dance', 'Beautiful', 'repeat from the top', 'Am I', 'Hello', 'Gone'])(
     'rejects %s', (c) => expect(CHORD_TOKEN_RE.test(c)).toBe(false),
   );
 

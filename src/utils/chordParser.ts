@@ -1,5 +1,6 @@
 import type { ParsedLine, ChordSegment } from '../types';
 import { CHORD_TOKEN_RE } from './chordGrammar';
+import { angloChordToCzech, czechChordToAnglo, usesCzechNotation } from './czechNotation';
 
 const DIRECTIVE_RE = /^\{([^:}]+)(?::([^}]*))?\}$/;
 
@@ -37,7 +38,7 @@ function findNextChordBracket(str: string): { start: number; end: number; chord:
 }
 
 /** Parse a single ChordPro line into a structured representation. */
-function parseLine(raw: string, sourceLine: number): ParsedLine {
+function parseLine(raw: string, sourceLine: number, czechSource = false): ParsedLine {
   const trimmed = raw.trim();
 
   if (trimmed === '') return { type: 'empty', raw, sourceLine };
@@ -72,7 +73,8 @@ function parseLine(raw: string, sourceLine: number): ParsedLine {
     if (lyricBefore || pendingChord) {
       segments.push({ chord: pendingChord, lyric: lyricBefore });
     }
-    pendingChord = next.chord;
+    // Chords are stored in English spelling (Hmi → Bm); display converts back per notation.
+    pendingChord = czechChordToAnglo(next.chord, czechSource);
     remaining = remaining.slice(next.end + 1);
   }
 
@@ -124,6 +126,7 @@ function consumeStrumBlock(rawLines: string[], startI: number): { strumLines: st
  * Section blocks (start_of_* / end_of_*) are grouped into 'section' lines with nested content. */
 export function parseChordPro(text: string): ParsedLine[] {
   const rawLines = text.split('\n');
+  const czechSource = usesCzechNotation(text);
 
   function parseRange(startI: number, endI: number): ParsedLine[] {
     const result: ParsedLine[] = [];
@@ -182,7 +185,7 @@ export function parseChordPro(text: string): ParsedLine[] {
       // End-of-section directives that escaped grouping — drop them
       if (trimmed.match(SECTION_END_RE)) { i++; continue; }
 
-      result.push(parseLine(rawLines[i], i));
+      result.push(parseLine(rawLines[i], i, czechSource));
       i++;
     }
 
@@ -197,7 +200,8 @@ export function lineHasChords(line: ParsedLine): boolean {
   return !!line.segments?.some((s) => s.chord !== '');
 }
 
-export type ChordNotation = 'anglo' | 'spanish';
+/** How chord names are displayed: letters (C D E … B), solfège (Do Re Mi), or Czech letters (… H, B = B♭, mi). */
+export type ChordNotation = 'anglo' | 'spanish' | 'czech';
 
 const SPANISH_NOTE: Record<string, string> = {
   C: 'Do', D: 'Re', E: 'Mi', F: 'Fa', G: 'Sol', A: 'La', B: 'Si',
@@ -205,6 +209,7 @@ const SPANISH_NOTE: Record<string, string> = {
 
 export function convertChordNotation(chord: string, notation: ChordNotation): string {
   if (notation === 'anglo') return chord;
+  if (notation === 'czech') return angloChordToCzech(chord);
   const match = chord.match(/^([A-G][#b]?)(.*?)(?:\/([A-G][#b]?))?$/);
   if (!match) return chord;
   const [, root, quality, bass] = match;

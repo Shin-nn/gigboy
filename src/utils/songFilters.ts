@@ -36,14 +36,15 @@ const FLAT_TO_SHARP: Record<string, string> = { Db: 'C#', Eb: 'D#', Gb: 'F#', Ab
 /** Normalizes free-text keys ("Bb", "a minor", "F#m") to "A#", "Am", "F#m". Returns undefined if unparseable. */
 export function normalizeKey(raw?: string): string | undefined {
   if (!raw) return undefined;
-  const match = raw.trim().match(/^([A-Ga-g])\s*([#b♯♭]?)\s*(.*)$/);
+  const match = raw.trim().match(/^([A-Ha-h])\s*([#b♯♭]?)\s*(.*)$/);
   if (!match) return undefined;
   const accidental = match[2] === '♯' ? '#' : match[2] === '♭' ? 'b' : match[2];
-  let root = match[1].toUpperCase() + accidental;
+  // H is the Czech/German B ("Hmi" → "Bm"; "mi"/"moll" already read as minor below).
+  let root = match[1].toUpperCase().replace('H', 'B') + accidental;
   root = FLAT_TO_SHARP[root] ?? root;
   if (!NOTE_ORDER.includes(root)) return undefined;
   const quality = match[3].trim().toLowerCase();
-  const isMinor = /^(m|min|minor|-)(?!aj)/.test(quality) && !quality.startsWith('maj');
+  const isMinor = /^(m|min|minor|moll|-)(?!aj)/.test(quality) && !quality.startsWith('maj');
   return isMinor ? `${root}m` : root;
 }
 

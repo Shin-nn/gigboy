@@ -12861,3 +12861,111 @@ input.stageplot-legend-number:focus {
     display: none;
   }
 }
+
+/* ─── Band chords page ─────────────────────────────────────────────────────── */
+
+.chords-page-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.chords-page-search {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  flex: 1 1 200px;
+  min-width: 0;
+  padding: 0 var(--space-sm);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--muted);
+}
+
+.chords-page-search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  padding: var(--space-xs) 0;
+  color: var(--text);
+}
+
+.chords-page-search input:focus {
+  outline: none;
+}
+
+.chords-page-editor {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xl);
+  padding: var(--space-xl);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+
+.chords-page-editor-fields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  min-width: 0;
+}
+
+.chords-page-editor-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+
+.chords-page-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: var(--space-md);
+}
+
+.chords-page-card {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-md);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.chords-page-card:disabled {
+  cursor: default;
+  opacity: 1;
+}
+
+.chords-page-card:not(:disabled):hover,
+.chords-page-card--active {
+  border-color: var(--accent);
+}
+
+.chords-page-card-name {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  font-weight: 700;
+  font-size: 1.05rem;
+}
+
+.chords-page-badge {
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--chord-bg);
+  color: var(--accent);
+}

@@ -70,9 +70,19 @@ export function useBandChordVoicings(bandId: string | null | undefined, canEdit:
     [bandId],
   );
 
+  /** Every override the band has, for listing (e.g. the band's chord page). */
+  const voicings = useMemo<ChordVoicing[]>(
+    () =>
+      Array.from(byKey.entries()).map(([k, frets]) => {
+        const sep = k.indexOf(':');
+        return { instrument: k.slice(0, sep) as VoicingInstrument, chordName: k.slice(sep + 1), frets };
+      }),
+    [byKey],
+  );
+
   return useMemo(
-    () => ({ overrideFor, save, remove, canEdit: canEdit && Boolean(bandId) }),
-    [overrideFor, save, remove, canEdit, bandId],
+    () => ({ overrideFor, save, remove, voicings, canEdit: canEdit && Boolean(bandId) }),
+    [overrideFor, save, remove, voicings, canEdit, bandId],
   );
 }
 

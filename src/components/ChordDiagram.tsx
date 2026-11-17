@@ -45,7 +45,7 @@ function fretLabel(value: number): string {
   return String(value);
 }
 
-function VoicingEditor({
+export function VoicingEditor({
   instrument,
   value,
   onChange,
@@ -256,7 +256,7 @@ const GRID_W = (NUM_STRINGS - 1) * STR_GAP;
 const SVG_W = GML + GRID_W + GMR;
 const STRING_LABELS = ['E', 'A', 'D', 'G', 'B', 'e'];
 
-function GuitarDiagram({ frets }: { frets: number[] }) {
+export function GuitarDiagram({ frets }: { frets: number[] }) {
   const played = frets.filter(f => f > 0);
   const minFret = played.length ? Math.min(...played) : 0;
   const maxFret = played.length ? Math.max(...played) : 4;
@@ -350,7 +350,7 @@ const UKE_GRID_W = (UKE_NUM_STRINGS - 1) * STR_GAP;
 const UKE_SVG_W = GML + UKE_GRID_W + GMR;
 const UKE_STRING_LABELS = ['G', 'C', 'E', 'A'];
 
-function UkuleleDiagram({ frets }: { frets: number[] }) {
+export function UkuleleDiagram({ frets }: { frets: number[] }) {
   const played = frets.filter(f => f > 0);
   const minFret = played.length ? Math.min(...played) : 0;
   const maxFret = played.length ? Math.max(...played) : 4;

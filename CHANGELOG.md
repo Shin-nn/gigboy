@@ -17,6 +17,13 @@ pre-1.0: minor bumps for features, patch bumps for fixes.
   create, update and delete songs, song lists, setlists, gigs, tours, technical riders and press
   kits. Clients authenticate with personal API tokens created under Profile → AI assistants
   (MCP); a token acts as its user and respects their editor/viewer role in each band.
+- **Czech chord notation.** Songs can be written with Czech/German chord names — `H` for B,
+  `B` for B♭, `mi`/`moll` for minor (`Hmi`, `Ami7`, `D/H`). A song that uses any H chord is read
+  as Czech, so its `B` means B♭; diagrams, transposition and key filters all understand it. A new
+  "A H B" notation button shows any song in Czech names, and Czech songs open in it by default.
+- **Band chord page** (sidebar → Chords). Browse every guitar and ukulele diagram, change a
+  chord's fingering for the whole band, reset it to the built-in, or add chords that have no
+  built-in diagram. Editors only; viewers can browse.
 
 ## [0.4.0] - 2026-10-20
 

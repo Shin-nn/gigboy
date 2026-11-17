@@ -15,11 +15,12 @@ const MINOR_QUALITIES = ['m', 'dim', '', 'm', 'm', '', ''];
  */
 export function diatonicChords(key: string): string[] {
   const trimmed = key.trim();
-  const match = trimmed.match(/^([A-Ga-g])([#b]?)(m(?!aj)|min)?/);
+  const match = trimmed.match(/^([A-Ha-h])([#b]?)(m(?!aj)|min)?/);
   if (!match) return [];
   const [, letter, accidental, minorMarker] = match;
   const isMinor = !!minorMarker;
-  const noteName = letter.toUpperCase() + accidental;
+  // H is the Czech/German B.
+  const noteName = letter.toUpperCase().replace('H', 'B') + accidental;
   const scale = accidental === 'b' ? FLAT_NOTES : SHARP_NOTES;
   const rootIdx = scale.indexOf(noteName);
   if (rootIdx === -1) return [];

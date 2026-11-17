@@ -6,9 +6,11 @@
  * Also accepts the "no chord" marker (N.C. / NC).
  */
 
-const ROOT = '[A-G](?:#|b|♯|♭)?';
-const ATOM = '(?:maj|min|dim|aug|sus|add|no|m|M|Δ|△|°|º|ø|\\+|-|(?:#|b|♯|♭)?\\d+|\\/\\d+|\\([^()\\s]{1,8}\\))';
-const BASS = '(?:\\/[A-G](?:#|b|♯|♭)?)';
+// H is the Czech/German name for B (see czechNotation.ts).
+const ROOT = '[A-H](?:#|b|♯|♭)?';
+// "moll"/"mi" are the Czech minor spellings (Hmi, Ami7).
+const ATOM = '(?:maj|min|moll|mi|dim|aug|sus|add|no|m|M|Δ|△|°|º|ø|\\+|-|(?:#|b|♯|♭)?\\d+|\\/\\d+|\\([^()\\s]{1,8}\\))';
+const BASS = '(?:\\/[A-H](?:#|b|♯|♭)?)';
 
 export const CHORD_SOURCE = `(?:${ROOT}${ATOM}{0,6}${BASS}?|N\\.C\\.|NC)`;
 

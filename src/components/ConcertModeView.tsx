@@ -21,6 +21,7 @@ import LyricHandNotesOverlay from './LyricHandNotesOverlay';
 import ConcertMetronomeFlash from './ConcertMetronomeFlash';
 import { useSongHandNotes } from '../hooks/useSongHandNotes';
 import type { ChordNotation } from '../utils/chordParser';
+import { readSongNotation } from '../lib/songNotation';
 import { getUserNoteColor } from '../lib/userColors';
 import { extractPinnedLineIds } from '../lib/lineAnchor';
 
@@ -163,7 +164,6 @@ export default function ConcertModeView({
   // Display prefs are fixed in concert mode — they're set up beforehand in SongView.
   const showChords = true;
   const chordInstrument: DiagramInstrument = 'guitar';
-  const chordNotation: ChordNotation = 'anglo';
   const [activeChord, setActiveChord] = useState<ActiveChord | null>(null);
   // Pagination (discrete pages) vs. continuous scrolling. Autoscroll needs continuous
   // scrolling, so the two toggles are mutually exclusive.
@@ -583,6 +583,8 @@ export default function ConcertModeView({
   }
 
   const currentSong = songs[currentIndex] ?? songs[0];
+  // Same notation the viewer picked for this song in SongView (Czech songs default to Czech).
+  const chordNotation: ChordNotation = currentSong ? readSongNotation(currentSong.id, currentSong.chordpro) : 'anglo';
   if (!currentSong) {
     return (
       <div className="not-found">
@@ -925,6 +927,7 @@ export default function ConcertModeView({
           instrument={chordInstrument}
           anchorRect={activeChord.rect}
           onClose={() => setActiveChord(null)}
+          notation={chordNotation}
           voicingOverride={chordVoicings.overrideFor('guitar', activeChord.chord)}
         />
       )}

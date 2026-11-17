@@ -32,8 +32,9 @@ import AddToMenu from './AddToMenu';
 import VisualMetronome from './VisualMetronome';
 import VisualTuner from './VisualTuner';
 import { transposeChord, replaceChordOccurrence } from '../utils/chordParser';
+import { angloChordToCzech, usesCzechNotation } from '../utils/czechNotation';
+import { readSongNotation, writeSongNotation } from '../lib/songNotation';
 import type { ChordNotation } from '../utils/chordParser';
-import { readStoredString, writeStoredString } from '../lib/safeStorage';
 import { useBands } from '../context/BandsContext';
 import { useAuth } from '../context/AuthContext';
 import { useSongHandNotes } from '../hooks/useSongHandNotes';
@@ -76,10 +77,6 @@ type SongPageState = {
   bandId?: string;
 };
 
-function notationStorageKey(songId: string): string {
-  return `gigboy-song-notation-${songId}`;
-}
-
 // Drawing is gone; existing strokes render read-only, so nothing ever changes them.
 const NOOP = () => {};
 
@@ -90,11 +87,11 @@ export default function SongView({ song, accentColor, bandId }: Props) {
   const [transpose, setTranspose] = useState(0);
   const [chordInstrument, setChordInstrument] = useState<DiagramInstrument>('guitar');
   const [chordNotation, setChordNotationState] = useState<ChordNotation>(
-    () => (readStoredString(notationStorageKey(song.id)) as ChordNotation | null) ?? 'anglo',
+    () => readSongNotation(song.id, song.chordpro),
   );
   const setChordNotation = useCallback((next: ChordNotation) => {
     setChordNotationState(next);
-    writeStoredString(notationStorageKey(song.id), next);
+    writeSongNotation(song.id, next);
   }, [song.id]);
   const [activeChord, setActiveChord] = useState<ActiveChord | null>(null);
   const [updatingFromFile, setUpdatingFromFile] = useState(false);
@@ -222,7 +219,9 @@ export default function SongView({ song, accentColor, bandId }: Props) {
     setShowNotes(false);
     setShowChordFinder(false);
     setShowHistory(false);
-    setChordNotationState((readStoredString(notationStorageKey(song.id)) as ChordNotation | null) ?? 'anglo');
+    setChordNotationState(readSongNotation(song.id, song.chordpro));
+    // Only re-read when switching songs, not on every edit of the current one.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [song.id]);
 
   // Set while the member is working the +/- controls, so the auto-save effect below only
@@ -263,7 +262,9 @@ export default function SongView({ song, accentColor, bandId }: Props) {
     async (newChordName: string, frets: number[]) => {
       if (!activeChord || chordInstrument === 'piano') return;
       await chordVoicings.save(chordInstrument, newChordName, frets);
-      const rawNewChord = transposeChord(newChordName, -transpose);
+      const englishNewChord = transposeChord(newChordName, -transpose);
+      // Write it back in the song's own notation, so a Czech song doesn't gain English "B"s.
+      const rawNewChord = usesCzechNotation(song.chordpro) ? angloChordToCzech(englishNewChord) : englishNewChord;
       const nextChordpro = replaceChordOccurrence(
         song.chordpro,
         activeChord.occurrence.sourceLine,
@@ -567,6 +568,14 @@ export default function SongView({ song, accentColor, bandId }: Props) {
                   aria-label="Use solfège chord names"
                 >
                   Do Re Mi
+                </button>
+                <button
+                  className={`instrument-toggle-btn${chordNotation === 'czech' ? ' instrument-toggle-btn--active' : ''}`}
+                  onClick={() => setChordNotation('czech')}
+                  aria-label="Use Czech chord names (H, B, mi)"
+                  title="Čeština: H, B = B♭, mi"
+                >
+                  A H B
                 </button>
               </div>
             </div>

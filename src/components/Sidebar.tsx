@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useLayoutEffect, useMemo } from 'react';
 import type { ReactNode } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { CalendarDays, ChevronDown, Route as RouteIcon, ChevronRight, ClipboardList, Folder, ListMusic, Music, Newspaper, Plus, Trash2, ChevronsUpDown } from 'lucide-react';
+import { CalendarDays, ChevronDown, Guitar, Route as RouteIcon, ChevronRight, ClipboardList, Folder, ListMusic, Music, Newspaper, Plus, Trash2, ChevronsUpDown } from 'lucide-react';
 import { useBands } from '../context/BandsContext';
 import { useAuth } from '../context/AuthContext';
 import { readStoredString, removeStoredString, writeStoredString } from '../lib/safeStorage';
@@ -783,6 +783,22 @@ export default function Sidebar({ open, mobile = false, onNavigate }: Props) {
                     {(bandSongsByBandId[band.id]?.length ?? 0) > 0 && (
                       <span className="sidebar-list-count">{bandSongsByBandId[band.id]?.length ?? 0}</span>
                     )}
+                  </button>
+                </div>
+
+                <div
+                  className={`sidebar-list-item${pathname === `/bands/${band.id}/chords` ? ' active' : ''}`}
+                >
+                  <button
+                    className="sidebar-list-item-btn"
+                    onClick={() => {
+                      clearGlobalSelection();
+                      navigate(`/bands/${band.id}/chords`);
+                      onNavigate?.();
+                    }}
+                  >
+                    <Guitar size={14} />
+                    <span className="sidebar-list-name">Chords</span>
                   </button>
                 </div>
 

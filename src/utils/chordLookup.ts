@@ -3,6 +3,7 @@
  * (`src/data/{guitar,ukulele}Chords.ts`) and by band chord-voicing overrides. Shared by
  * `ChordDiagram` and `useBandChordVoicings` so overrides key off the exact same string.
  */
+import { czechChordToAnglo } from './czechNotation';
 
 const ROOT_LOOKUP_ALIAS: Record<string, string> = {
   C: 'C', 'C#': 'C#', Db: 'C#',
@@ -37,7 +38,8 @@ function normalizeQualityForLookup(suffix: string): string {
 }
 
 export function normalizeChordForLookup(chord: string): string {
-  const base = chord.split('/')[0].trim().replace(/♯/g, '#').replace(/♭/g, 'b');
+  // Czech spellings (Hmi, Ami) map onto the English-keyed tables; a bare "B" stays English B.
+  const base = czechChordToAnglo(chord.trim().replace(/♯/g, '#').replace(/♭/g, 'b'), false).split('/')[0];
   const match = base.match(/^([A-Ga-g])([#b]?)(.*)$/);
   if (!match) return base;
 
@@ -56,7 +58,7 @@ export function normalizeChordForLookup(chord: string): string {
 export function normalizeChordBassForLookup(chord: string): string | undefined {
   const parts = chord.split('/');
   if (parts.length < 2) return undefined;
-  const bassRaw = parts[1].trim().replace(/♯/g, '#').replace(/♭/g, 'b');
+  const bassRaw = parts[1].trim().replace(/♯/g, '#').replace(/♭/g, 'b').replace(/^H/, 'B');
   const match = bassRaw.match(/^([A-Ga-g])([#b]?)/);
   if (!match) return undefined;
   const root = `${match[1].toUpperCase()}${match[2]}`;
